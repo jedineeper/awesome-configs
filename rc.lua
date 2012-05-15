@@ -20,44 +20,107 @@ require('awful.rules')
 require('beautiful')
 require('naughty')
 
+require('debian.menu')
+
 -- Load theme
 beautiful.init(awful.util.getdir('config')..'/zenburn.lua')
 
 -- {{{1 Variables
 
-settings.modkey  = 'Mod4'
-settings.term    = 'urxvtc'
-settings.browser = 'opera'
-settings.layouts =
+settings.modkey      = 'Mod4'
+settings.term        = 'gnome-terminal'
+settings.browser     = 'google-chrome'
+settings.editor_cmd  = 'gedit'
+settings.layouts     =
 {
     awful.layout.suit.tile,
     awful.layout.suit.tile.bottom,
-    awful.layout.suit.max,
-    awful.layout.suit.magnifier,
-    awful.layout.suit.floating
+    awful.layout.suit.max
+--  awful.layout.suit.magnifier,
+--  awful.layout.suit.floating
 }
+
+mytasklist = {}
+mytasklist.buttons = awful.util.table.join(
+                     awful.button({ }, 1, function (c)
+                                              if c == client.focus then
+                                                  c.minimized = true
+                                              else
+                                                  if not c:isvisible() then
+                                                      awful.tag.viewonly(c:tags()[1])
+                                                  end
+                                                  -- This will also un-minimize
+                                                  -- the client, if needed
+                                                  client.focus = c
+                                                  c:raise()
+                                              end
+                                          end),
+                     awful.button({ }, 3, function ()
+                                              if instance then
+                                                  instance:hide()
+                                                  instance = nil
+                                              else
+                                                  instance = awful.menu.clients({ width=250 })
+                                              end
+                                          end),
+                     awful.button({ }, 4, function ()
+                                              awful.client.focus.byidx(1)
+                                              if client.focus then client.focus:raise() end
+                                          end),
+                     awful.button({ }, 5, function ()
+                                              awful.client.focus.byidx(-1)
+                                              if client.focus then client.focus:raise() end
+                                          end))
 
 -- {{{1 Tags
 
-tags.settings = {
-    { name = 'term', layout = settings.layouts[1]  },
-    { name = 'web',  layout = settings.layouts[3]  },
-    { name = 'dev',  layout = settings.layouts[1]  },
-    { name = 'im',   layout = settings.layouts[1], mwfact = 0.13 },
-    { name = 'misc ', layout = settings.layouts[5]  },
+
+--tags.settings = {
+--    { name = '1', layout = settings.layouts[1]  },
+--    { name = '2', layout = settings.layouts[3]  },
+--    { name = '3', layout = settings.layouts[1]  },
+--    { name = '4', layout = settings.layouts[1], mwfact = 0.13 },
+--    { name = '5', layout = settings.layouts[5]  },
+--}
+
+--for s = 1, screen.count() do
+--    tags[s] = {}
+--    for i, v in ipairs(tags.settings) do
+--        tags[s][i] = tag({ name = v.name })
+--        tags[s][i].screen = s
+--        awful.tag.setproperty(tags[s][i], 'layout', v.layout)
+--        awful.tag.setproperty(tags[s][i], 'mwfact', v.mwfact)
+--        awful.tag.setproperty(tags[s][i], 'hide',   v.hide)
+--    end
+--    tags[s][1].selected = true
+--end
+
+tags = {}
+for s = 1, screen.count() do
+    -- Each screen has its own tag table.
+    tags[s] = awful.tag({ 1, 2, 3, 4, 5 }, s, settings.layouts[1])
+end
+
+-- {{{1 Menu
+-- Create a launcher widget and a main menu
+myawesomemenu = {
+--   { "manual", settings.term .. " -e man awesome" },
+   { "edit config", settings.editor_cmd .. " " .. awesome.conffile },
+   { "home screens", awful.util.spawn( '/home/craig/.screenlayout/Home.sh' ) },
+   { "work screens", awful.util.spawn( '/home/craig/.screenlayout/WorkDesk.sh' ) },
+   { "restart", awesome.restart },
+   { "quit", awesome.quit }
 }
 
-for s = 1, screen.count() do
-    tags[s] = {}
-    for i, v in ipairs(tags.settings) do
-        tags[s][i] = tag({ name = v.name })
-        tags[s][i].screen = s
-        awful.tag.setproperty(tags[s][i], 'layout', v.layout)
-        awful.tag.setproperty(tags[s][i], 'mwfact', v.mwfact)
-        awful.tag.setproperty(tags[s][i], 'hide',   v.hide)
-    end
-    tags[s][1].selected = true
-end
+mymainmenu = awful.menu.new({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
+                                    { "Debian", debian.menu.Debian_menu.Debian },
+                                    { "open terminal", settings.term }
+                                  }
+                         })
+
+mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
+                                     menu = mymainmenu })
+
 
 -- {{{1 Widgets
 
@@ -82,6 +145,9 @@ for s = 1, screen.count() do
                          awful.button({ }, 3, function () awful.layout.inc(settings.layouts, -1) end)
     ))
     taglist[s] = awful.widget.taglist.new(s, awful.widget.taglist.label.all, taglist.buttons)
+    mytasklist[s] = awful.widget.tasklist(function(c)
+					    return awful.widget.tasklist.label.currenttags(c, s)
+                                          end, mytasklist.buttons)
     statusbar[s] = awful.wibox(
     {
         position = 'top',
@@ -93,16 +159,18 @@ for s = 1, screen.count() do
     statusbar[s].widgets =
     {
         {
+            mylauncher,
             taglist[s],
-            layoutbox[s],
             promptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
         systray,
-        clockwidget,
+	layoutbox[s],
+	clockwidget,
         batwidget,
         memwidget,
-        thermalwidget,
+        -- thermalwidget,
+	mytasklist[s],
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
@@ -148,6 +216,7 @@ local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'space', function () awful.layout.inc(settings.layouts, 1) end),
     awful.key({ settings.modkey, 'Shift'   }, 'space', function () awful.layout.inc(settings.layouts, -1) end),
     awful.key({ settings.modkey            }, 'r',     function () promptbox[mouse.screen]:run() end),
+    awful.key({ settings.modkey            }, 'F12',   function () awful.util.spawn("xlock") end),
     awful.key({ }, '#121',  function () awful.util.spawn_with_shell('dvol -t') end),
     awful.key({ }, '#122',  function () awful.util.spawn_with_shell('dvol -d 2') end),
     awful.key({ }, '#123',  function () awful.util.spawn_with_shell('dvol -i 2') end)
@@ -208,25 +277,6 @@ local clientbuttons = awful.util.table.join(
 
 root.keys(globalkeys)
 
--- {{{1 Rules
-
-awful.rules.rules =
-{
-    { rule = { },
-      properties = { border_width = beautiful.border_width,
-                     border_color = beautiful.border_normal,
-                     focus = true,
-                     keys = clientkeys,
-                     buttons = clientbuttons } },
-    { rule = { class = 'MPlayer' },
-      properties = { floating = true } },
-    { rule = { class = 'gimp' },
-      properties = { floating = true } },
-    { rule = { class = 'opera' },
-      properties = { tag = tags[1][2] } },
-    { rule = { class = 'pidgin' },
-      properties = { tag = tags[1][4] } }
-}
 
 -- {{{1 Signals
 
@@ -247,6 +297,17 @@ client.add_signal('manage', function (c, startup)
 
     c.size_hints_honor = false
 end)
+
+
+awful.rules.rules = {
+    -- All clients will match this rule.
+    { rule = { },
+      properties = { border_width = beautiful.border_width,
+                     border_color = beautiful.border_normal,
+                     focus = true,
+                     keys = clientkeys,
+                     buttons = clientbuttons } },
+}
 
 client.add_signal('focus', function(c) c.border_color = beautiful.border_focus end)
 client.add_signal('unfocus', function(c) c.border_color = beautiful.border_normal end)
