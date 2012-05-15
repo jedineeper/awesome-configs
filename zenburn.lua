@@ -77,8 +77,8 @@ theme.taglist_squares_unsel = confdir .. "/icons/taglist/squareza.png"
 -- }}}
 
 -- {{{ Misc icons
---theme.awesome_icon           = confdir .. "/icons/awesome.png"
---theme.menu_submenu_icon      = "/usr/share/awesome/themes/default/submenu.png"
+theme.awesome_icon           = confdir .. "/icons/awesome.png"
+theme.menu_submenu_icon      = "/usr/share/awesome/themes/default/submenu.png"
 --theme.tasklist_floating_icon = "/usr/share/awesome/themes/default/tasklist/floatingw.png"
 -- }}}
 
