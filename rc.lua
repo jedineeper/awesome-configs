@@ -106,8 +106,8 @@ end
 myawesomemenu = {
 --   { "manual", settings.term .. " -e man awesome" },
    { "edit config", settings.editor_cmd .. " " .. awesome.conffile },
-   { "home screens", awful.util.spawn( '/home/craig/.screenlayout/Home.sh' ) },
-   { "work screens", awful.util.spawn( '/home/craig/.screenlayout/WorkDesk.sh' ) },
+   { "home screens", "/bin/sh /home/craig/.screenlayout/Home.sh" },
+   { "work screens", "/bin/sh /home/craig/.screenlayout/WorkDesk.sh" },
    { "restart", awesome.restart },
    { "quit", awesome.quit }
 }
@@ -161,11 +161,11 @@ for s = 1, screen.count() do
         {
             mylauncher,
             taglist[s],
+      	    layoutbox[s],
             promptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
         systray,
-	layoutbox[s],
 	clockwidget,
         batwidget,
         memwidget,
@@ -314,15 +314,59 @@ client.add_signal('unfocus', function(c) c.border_color = beautiful.border_norma
 
 -- {{{1 Functions
 
+function atteryInfo(adapter)
+     spacer = " "
+     local fsta = io.open("/sys/class/power_supply/"..adapter.."/status")
+     local sta = fsta:read()
+     local battery = math.floor(cur * 100 / cap)
+     if sta:match("Charging") then
+         dir = "^"
+         battery = "A/C ("..battery..")"
+     elseif sta:match("Discharging") then
+         dir = "v"
+         if tonumber(battery) > 25 and tonumber(battery) < 75 then
+             battery = battery
+         elseif tonumber(battery) < 25 then
+             if tonumber(battery) < 10 then
+                 naughty.notify({ title      = "Battery Warning"
+                                , text       = "Battery low!"..spacer..battery.."%"..spacer.."left!"
+                                , timeout    = 5
+                                , position   = "top_right"
+                                , fg         = beautiful.fg_focus
+                                , bg         = beautiful.bg_focus
+                                })
+             end
+             battery = battery
+         else
+             battery = battery
+         end
+     else
+         dir = "="
+         battery = "A/C"
+     end
+     batterywidget.text = "|"..spacer..dir..spacer..battery.."%"..spacer.."|"
+     fsta:close()
+ end
+
 function battery(id)
     -- Ugly long HAL string
     hal = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..id..' --key battery.charge_level.percentage')
+    pwr = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..id..' --key battery.rechargeable.is_charging')
     if hal then
         charge = hal:read('*all')
         hal:close()
     end
+    if pwr then
+        power = pwr:read('*all')
+        pwr:close()
+        if power:match('true') then
+            crm_indicator = ' ^'
+        else
+            crm_indicator = ' v'
+        end 
+    end
     
-    return charge:gsub("\n", '')..'%'.. ' |'
+    return charge:gsub("\n", '')..'%'.. crm_indicator .. ' |'
 end
 
 function memory()
