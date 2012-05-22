@@ -224,6 +224,7 @@ local globalkeys = awful.util.table.join(
 
 local clientkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'c',     function (c) c:kill() end),
+    awful.key({ settings.modkey,           }, "o",     awful.client.movetoscreen),
     awful.key({ settings.modkey, 'Control' }, 'space', awful.client.floating.toggle),
     awful.key({ settings.modkey, 'Shift'   }, 'r',     function (c) c:redraw() end),
     awful.key({ settings.modkey            }, 't',     awful.client.togglemarked),
