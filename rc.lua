@@ -29,6 +29,7 @@ beautiful.init(awful.util.getdir('config')..'/zenburn.lua')
 
 settings.modkey      = 'Mod4'
 settings.term        = 'gnome-terminal'
+settings.explorer    = 'marlin'
 settings.browser     = 'google-chrome'
 settings.editor_cmd  = 'gedit'
 settings.layouts     =
@@ -188,6 +189,7 @@ local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey,           }, 'Escape',awful.tag.history.restore),
     awful.key({ settings.modkey            }, 'x',     function () awful.util.spawn(settings.term) end),
     awful.key({ settings.modkey            }, 'f',     function () awful.util.spawn(settings.browser) end),
+    awful.key({ settings.modkey            }, 'e',     function () awful.util.spawn(settings.explorer) end),
     awful.key({ settings.modkey, 'Control' }, 'r',     awesome.restart),
     awful.key({ settings.modkey, 'Shift'   }, 'q',     awesome.quit),
     awful.key({ settings.modkey,           }, 'j',     function ()
