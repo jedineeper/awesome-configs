@@ -392,3 +392,5 @@ thermaltimer:add_signal('timeout', function() thermalwidget.text = thermal() end
 thermaltimer:start()
 
 io.stderr:write("\n\rAwesome loaded at "..os.date('%B %d, %H:%M').."\r\n\n")
+
+
