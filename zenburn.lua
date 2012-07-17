@@ -13,7 +13,7 @@ theme.wallpaper_cmd = { "awsetbg /usr/share/awesome/themes/zenburn/zenburn-backg
 
 
 -- {{{ Styles
-theme.font      = "Profont 8"
+theme.font      = "Profont 7"
 
 -- {{{ Colors
 theme.fg_normal = "#DCDCCC"
