@@ -19,6 +19,7 @@ require('awful.autofocus')
 require('awful.rules')
 require('beautiful')
 require('naughty')
+require('functions')
 
 require('debian.menu')
 
@@ -32,6 +33,7 @@ settings.term        = 'gnome-terminal'
 settings.explorer    = 'marlin'
 settings.browser     = 'google-chrome'
 settings.editor_cmd  = 'gedit'
+settings.gtg         = 'gtg'
 settings.layouts     =
 {
     awful.layout.suit.tile,
@@ -129,6 +131,7 @@ systray       = widget({ type = 'systray' })
 thermalwidget = widget({ type = 'textbox', name = 'thermalwidget' })
 memwidget     = widget({ type = 'textbox', name = 'memwidget' })
 batwidget     = widget({ type = 'textbox', name = 'batwidget' })
+cpuwidget     = widget({ type = 'textbox', name = 'cpuwidget' }) 
 clockwidget   = awful.widget.textclock({ align = 'right' })
 
 taglist.buttons = awful.util.table.join(
@@ -170,7 +173,8 @@ for s = 1, screen.count() do
 	clockwidget,
         batwidget,
         memwidget,
-        -- thermalwidget,
+        cpuwidget,        
+-- thermalwidget,
 	mytasklist[s],
         layout = awful.widget.layout.horizontal.rightleft
     }
@@ -190,6 +194,7 @@ local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'x',     function () awful.util.spawn(settings.term) end),
     awful.key({ settings.modkey            }, 'f',     function () awful.util.spawn(settings.browser) end),
     awful.key({ settings.modkey            }, 'e',     function () awful.util.spawn(settings.explorer) end),
+    awful.key({ settings.modkey            }, 't',     function () awful.util.spawn(settings.gtg) end),
     awful.key({ settings.modkey, 'Control' }, 'r',     awesome.restart),
     awful.key({ settings.modkey, 'Shift'   }, 'q',     awesome.quit),
     awful.key({ settings.modkey,           }, 'j',     function ()
@@ -377,6 +382,48 @@ function thermal()
     return temperature..'°C'..' | '
 end
 
+-- {{{1 Markup
+
+function set_bg(bgcolor, text)
+    if text then return '<span background="'..bgcolor..'">'..text..'</span>' end
+end
+
+function set_fg(fgcolor, text)
+    if text then return '<span color="'..fgcolor..'">'..text..'</span>' end
+end
+
+function set_font(font, text)
+    if text then return '<span font_desc="'..font..'">'..text..'</span>' end
+end
+
+local separator_l = ' '
+local separator_r = '| '
+
+
+function cpu(widget)
+
+    local temperature, howmany = 0, 0
+    local sensors = io.popen('sensors')
+    if sensors then
+        for line in sensors:lines() do
+            if line:match(':%s+%+([.%d]+)') then
+                howmany = howmany + 1
+                temperature = temperature + tonumber(line:match(':%s+%+([.%d]+)'))
+            end
+        end
+        sensors:close()
+    end
+    temperature = temperature / howmany
+    local freq = {}
+
+    --for i = 0, 1 do
+        freq = io.fread('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'):match('(.*)000')
+    --end
+
+    widget.text = separator_l..freq..'/'..freq..'MHz @ '..temperature..'C'..separator_r
+
+end
+
 -- {{{1 Timers
 
 battimer = timer { timeout = 30 }
@@ -390,6 +437,10 @@ memtimer:start()
 thermaltimer = timer { timeout = 10 }
 thermaltimer:add_signal('timeout', function() thermalwidget.text = thermal() end)
 thermaltimer:start()
+
+cputimer = timer { timeout = 1 }
+cputimer:add_signal('timeout', function() cpu(cpuwidget) end)
+cputimer:start()
 
 io.stderr:write("\n\rAwesome loaded at "..os.date('%B %d, %H:%M').."\r\n\n")
 
