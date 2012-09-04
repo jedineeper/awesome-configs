@@ -109,6 +109,7 @@ end
 myawesomemenu = {
 --   { "manual", settings.term .. " -e man awesome" },
    { "edit config", settings.editor_cmd .. " " .. awesome.conffile },
+   { "laptop-only", "/bin/sh /home/craig/.screenlayout/Laptop.sh" },
    { "home screens", "/bin/sh /home/craig/.screenlayout/Home.sh" },
    { "work screens", "/bin/sh /home/craig/.screenlayout/WorkDesk.sh" },
    { "restart", awesome.restart },
