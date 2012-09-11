@@ -363,7 +363,7 @@ function memory()
     local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-    return '  '..mem_in_use..'Mb'..' | '
+    return '  '..mem_in_use..'Mb **branch**'..' | '
 end
 
 function thermal()
