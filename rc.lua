@@ -225,6 +225,12 @@ local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey, 'Shift'   }, 'space', function () awful.layout.inc(settings.layouts, -1) end),
     awful.key({ settings.modkey            }, 'r',     function () promptbox[mouse.screen]:run() end),
     awful.key({ settings.modkey            }, 'F12',   function () awful.util.spawn("xlock") end),
+    awful.key({ settings.modkey		   }, 'F11',   function ()
+                  awful.prompt.run({ prompt = "Run Lua code: " },
+                  promptbox[mouse.screen].widget,
+                  awful.util.eval, nil,
+                  awful.util.getdir("cache") .. "/history_eval")
+              end),
     awful.key({ }, '#121',  function () awful.util.spawn_with_shell('dvol -t') end),
     awful.key({ }, '#122',  function () awful.util.spawn_with_shell('dvol -d 2') end),
     awful.key({ }, '#123',  function () awful.util.spawn_with_shell('dvol -i 2') end)
@@ -330,6 +336,11 @@ function battery(id)
     if hal then
         charge = hal:read('*all')
         hal:close()
+	if tonumber(charge) < 20 then
+		charge = '<span color="red">'..charge
+	else
+		charge = '<span color="green">'..charge
+	end
     end
     if pwr then
         power = pwr:read('*all')
@@ -341,7 +352,7 @@ function battery(id)
         end 
     end
     
-    return charge:gsub("\n", '')..'%'.. crm_indicator .. ' |'
+    return charge:gsub("\n", '')..'%'.. crm_indicator .. '</span> |'
 end
 
 function memory()
@@ -424,6 +435,7 @@ function cpu(widget)
     widget.text = separator_l..freq..'/'..freq..'MHz @ '..temperature..'C'..separator_r
 
 end
+
 
 -- {{{1 Timers
 
